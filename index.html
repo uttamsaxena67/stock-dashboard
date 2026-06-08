@@ -418,15 +418,15 @@ function initChart(pane){
     const timeStr=dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
     const fmt=v=>v>=100?v.toLocaleString('en-IN',{maximumFractionDigits:2}):v.toFixed(4);
     const vol=d.volume?formatVol(d.volume):'--';
-    tip.innerHTML=\`<div class="ohlc-date">\${dateStr} \${timeStr}</div>
+    tip.innerHTML=`<div class="ohlc-date">${dateStr} ${timeStr}</div>
 <div class="ohlc-row">
-  <span class="ohlc-o">O <b>\${fmt(d.open)}</b></span>
-  <span class="ohlc-h">H <b>\${fmt(d.high)}</b></span>
-  <span class="ohlc-l">L <b>\${fmt(d.low)}</b></span>
-  <span class="ohlc-c">C <b>\${fmt(d.close)}</b></span>
-  <span class="ohlc-chg \${dir}">\${sign}\${fmt(chg)} (\${sign}\${pct.toFixed(2)}%)</span>
+  <span class="ohlc-o">O <b>${fmt(d.open)}</b></span>
+  <span class="ohlc-h">H <b>${fmt(d.high)}</b></span>
+  <span class="ohlc-l">L <b>${fmt(d.low)}</b></span>
+  <span class="ohlc-c">C <b>${fmt(d.close)}</b></span>
+  <span class="ohlc-chg ${dir}">${sign}${fmt(chg)} (${sign}${pct.toFixed(2)}%)</span>
 </div>
-<div class="ohlc-v">Vol: \${vol}</div>\`;
+<div class="ohlc-v">Vol: ${vol}</div>`;
     tip.classList.add('show');
   });
 
