@@ -131,6 +131,18 @@ body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospa
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+/* OHLC TOOLTIP */
+.ohlc-tooltip{position:absolute;top:8px;left:8px;z-index:30;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:10px;pointer-events:none;display:none;line-height:1.7;}
+.ohlc-tooltip.show{display:block;}
+.ohlc-row{display:flex;gap:8px;align-items:center;}
+.ohlc-date{color:var(--text2);font-size:9px;margin-bottom:3px;}
+.ohlc-o{color:#94a3b8;}
+.ohlc-h{color:#00c896;}
+.ohlc-l{color:#ff4757;}
+.ohlc-c{color:var(--text);font-weight:700;}
+.ohlc-v{color:var(--text2);font-size:9px;}
+.ohlc-chg.up{color:#00c896;}
+.ohlc-chg.dn{color:#ff4757;}
 </style>
 </head>
 <body>
@@ -393,9 +405,36 @@ function buildSidebar(pane,ib){
 function initChart(pane){
   pane.chart=LightweightCharts.createChart(pane.cc,{width:pane.cc.offsetWidth,height:pane.cc.offsetHeight||200,...ctheme(),crosshair:{mode:LightweightCharts.CrosshairMode.Normal},rightPriceScale:{borderColor:'transparent'},timeScale:{borderColor:'transparent',timeVisible:true,secondsVisible:false},handleScroll:true,handleScale:true});
   pane.cs=pane.chart.addCandlestickSeries({upColor:'#00c896',downColor:'#ff4757',borderUpColor:'#00c896',borderDownColor:'#ff4757',wickUpColor:'#00c896',wickDownColor:'#ff4757'});
+
+  // OHLC Tooltip
+  const tip=document.createElement('div');tip.className='ohlc-tooltip';pane.ca.appendChild(tip);
+  pane.chart.subscribeCrosshairMove(param=>{
+    if(!param.time||!param.seriesData||!pane.cs){tip.classList.remove('show');return;}
+    const d=param.seriesData.get(pane.cs);
+    if(!d){tip.classList.remove('show');return;}
+    const chg=d.close-d.open,pct=(chg/d.open*100),dir=chg>=0?'up':'dn',sign=chg>=0?'+':'';
+    const dt=new Date(param.time*1000);
+    const dateStr=dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+    const timeStr=dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    const fmt=v=>v>=100?v.toLocaleString('en-IN',{maximumFractionDigits:2}):v.toFixed(4);
+    const vol=d.volume?formatVol(d.volume):'--';
+    tip.innerHTML=\`<div class="ohlc-date">\${dateStr} \${timeStr}</div>
+<div class="ohlc-row">
+  <span class="ohlc-o">O <b>\${fmt(d.open)}</b></span>
+  <span class="ohlc-h">H <b>\${fmt(d.high)}</b></span>
+  <span class="ohlc-l">L <b>\${fmt(d.low)}</b></span>
+  <span class="ohlc-c">C <b>\${fmt(d.close)}</b></span>
+  <span class="ohlc-chg \${dir}">\${sign}\${fmt(chg)} (\${sign}\${pct.toFixed(2)}%)</span>
+</div>
+<div class="ohlc-v">Vol: \${vol}</div>\`;
+    tip.classList.add('show');
+  });
+
   new ResizeObserver(()=>{const w=pane.cc.offsetWidth,h=pane.cc.offsetHeight;if(w>0&&h>0)pane.chart.resize(w,h);}).observe(pane.cc);
   loadData(pane);
 }
+
+function formatVol(v){if(v>=10000000)return(v/10000000).toFixed(2)+'Cr';if(v>=100000)return(v/100000).toFixed(2)+'L';if(v>=1000)return(v/1000).toFixed(1)+'K';return v.toString();}
 
 function getYFS(src,sym){if(src==='india')return sym.includes('.')?sym:sym+'.NS';return sym;}
 function getInt(tf){return {'1m':'1m','2m':'2m','5m':'5m','15m':'15m','30m':'30m','60m':'60m','1d':'1d','1wk':'1wk','1mo':'1mo'}[tf]||tf;}
