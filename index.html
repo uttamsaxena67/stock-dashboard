@@ -332,6 +332,7 @@ function setChartCount(n){chartCount=parseInt(n);renderGrid();save();}
 function renderGrid(){
   const g=document.getElementById('grid');panes.forEach(p=>{if(p.chart)p.chart.remove();});
   g.className=`grid-${chartCount}`;g.innerHTML='';panes=[];
+  window._initialLoad=true;
   const sv=load();
   for(let i=0;i<chartCount;i++){
     const cfg=(sv&&sv.panes&&sv.panes[i])||DPANES[i]||DPANES[0];
@@ -343,6 +344,8 @@ function renderGrid(){
       initChart(panes[i]);
       await new Promise(r=>setTimeout(r,700));
     }
+    // All panes loaded — now enable saving
+    window._initialLoad=false;
   });
 }
 
@@ -524,7 +527,8 @@ async function loadData(pane){
     pane.inds.forEach(id=>{const def=DEFS.find(d=>d.id===id);if(def)applyInd(pane,def);});
     if(pane.data.length>14){const r=calcRSI(pane.data,14);if(r.length)pane.lrsi=r[r.length-1].value;}
     checkAlerts(pane);
-    save(); // Always save after successful load
+    // Only save after initial load is complete (avoid overwriting saved settings)
+    if(!window._initialLoad) save();
   }catch(e){
     showErr(pane,`Cannot load ${pane.sym} — ${e.message}\n\nClick to retry`,()=>loadData(pane));
   }
@@ -678,7 +682,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     if(!isDark){document.body.classList.add('light');document.getElementById('themeToggle').textContent='☀️';}
     if(autoRefInt>0){document.getElementById('refreshSel').value=autoRefInt;setAutoRefresh(autoRefInt);}
   }else{watchlists={'My Stocks':[],'Crypto':[]};}
-  updAlertBadge();updateMarket();setInterval(updateMarket,60000);
+  window._initialLoad=true;updAlertBadge();updateMarket();setInterval(updateMarket,60000);
   if('Notification'in window&&Notification.permission==='default')Notification.requestPermission();
   fetchFX();setInterval(fetchFX,300000);
   renderGrid();
