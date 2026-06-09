@@ -524,6 +524,7 @@ async function loadData(pane){
     pane.inds.forEach(id=>{const def=DEFS.find(d=>d.id===id);if(def)applyInd(pane,def);});
     if(pane.data.length>14){const r=calcRSI(pane.data,14);if(r.length)pane.lrsi=r[r.length-1].value;}
     checkAlerts(pane);
+    save(); // Always save after successful load
   }catch(e){
     showErr(pane,`Cannot load ${pane.sym} — ${e.message}\n\nClick to retry`,()=>loadData(pane));
   }
